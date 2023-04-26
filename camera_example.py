@@ -6,15 +6,12 @@ import cv2
 # initialize the camera and grab a reference to the raw camera capture
 haar_cascade = cv2.CascadeClassifier("haar_face.xml")
 camera = PiCamera()
-f = open("logs.txt","w")
-# out = cv2.VideoWriter('output.mp4', cv2.VideoWriter_fourcc("M", "P", "E", "G"), 32.0, (640,  480))
 camera.resolution = (640, 480)
 camera.framerate = 10
-rawCapture = PiRGBArray(camera, size=(640, 480))
+rawCapture = PiRGBArray(camera, size=camera.resolution)
 # allow the camera to warmup
 time.sleep(0.1)
 # capture frames from the camera
-f.write(time.strftime("%d.%m.%Y г. %H:%M", time.localtime()))
 for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
 	# grab the raw NumPy array representing the image, then initialize the timestamp
 	# and occupied/unoccupied text
@@ -24,32 +21,24 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
 	rect = haar_cascade.detectMultiScale(image, scaleFactor=1.1, minNeighbors=8)
 	cadr_x = 320
 	cadr_y = 240
-
 	for num, (x,y,w,h) in enumerate(rect):
 		cx = x + w//2
 		cy = y + h//2
 		cv2.rectangle(image, (x,y), (x+w, y+h), (255,255,255), thickness = 2)
 		cv2.circle(image, (cx,cy), radius=2, color=(255,255,255), thickness=-1)
 		cv2.putText(image, f"face {num}", (x-10,y-10), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
-		f.write(f"{abs(cx-cadr_x)}, {abs(cy-cadr_y)}\t")
-		if num == len(rect) - 1:
-			f.write("\n")
-		print("logged")
-		# print([abs(cx-cadr_x), abs(cy-cadr_y)], end = "\t")
-		# if num == len(rect)-1:
-		# 	print("\n")
+		print([abs(cx-cadr_x), abs(cy-cadr_y)], end = "\t")
+		if num == len(rect)-1:
+			print("\n")
 
 	cv2.circle(image, (cadr_x,cadr_y), radius=3, color=(255,255, 255), thickness=-1)
-	# out.write(image)
 	# show the frame
-	# cv2.imshow("Frame", image)
-	key = cv2.waitKey(1) & 0xFF
-	# print("Frame is recording")
-	# clear the stream in preparation for the next frame
+	cv2.imshow("Frame", image)
+ 	# clear the stream in preparation for the next frame
 	rawCapture.truncate(0)
+	key = cv2.waitKey(1) & 0xFF
 	# if the `q` key was pressed, break from the loop
 	if key == ord("q"):
-		f.close()
 		break
 	
 
